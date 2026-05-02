@@ -2,13 +2,18 @@ import * as vscode from 'vscode';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
+import { AnalyzerClient } from './analyzer-client';
 
 export class WebviewProvider implements vscode.Disposable {
     private _panel: vscode.WebviewPanel | undefined;
     private readonly _extensionUri: vscode.Uri;
     private _disposables: vscode.Disposable[] = [];
+    private _debounceTimer: NodeJS.Timeout | undefined;
 
-    constructor(private readonly context: vscode.ExtensionContext) {
+    constructor(
+        private readonly context: vscode.ExtensionContext,
+        private readonly analyzerClient: AnalyzerClient
+    ) {
         this._extensionUri = context.extensionUri;
     }
 
@@ -39,25 +44,46 @@ export class WebviewProvider implements vscode.Disposable {
 
         this._panel.onDidDispose(
             () => {
-                this.dispose();
+                this._panel = undefined;
             },
             null,
             this._disposables
         );
 
-        // Send demo message after 500ms
-        setTimeout(() => {
-            if (this._panel) {
-                this._panel.webview.postMessage({
-                    type: 'demo',
-                    pets: [
-                        { id: 'pet1', name: 'name', type: 'String', x: 150, y: 200, status: 'alive', animPhase: 0 },
-                        { id: 'pet2', name: 'count', type: 'i32', x: 350, y: 200, status: 'alive', animPhase: 0 },
-                        { id: 'pet3', name: 'items', type: 'Vec', x: 550, y: 200, status: 'alive', animPhase: 0 }
-                    ]
-                });
-            }
-        }, 500);
+        // Initial analysis if there is an active editor
+        if (vscode.window.activeTextEditor) {
+            this.onDocumentSave(vscode.window.activeTextEditor.document);
+        }
+    }
+
+    public onDocumentChange(document: vscode.TextDocument) {
+        if (this._debounceTimer) {
+            clearTimeout(this._debounceTimer);
+        }
+        this._debounceTimer = setTimeout(() => {
+            this._runAnalysis(document);
+        }, 800);
+    }
+
+    public onDocumentSave(document: vscode.TextDocument) {
+        if (this._debounceTimer) {
+            clearTimeout(this._debounceTimer);
+        }
+        this._runAnalysis(document);
+    }
+
+    private async _runAnalysis(document: vscode.TextDocument) {
+        if (!this._panel) {
+            return;
+        }
+
+        const events = await this.analyzerClient.analyze(document.fileName, document.getText());
+        
+        this._panel.webview.postMessage({
+            type: 'ownership_events',
+            filename: path.basename(document.fileName),
+            events: events
+        });
     }
 
     private _getHtmlForWebview(webview: vscode.Webview): string {
@@ -81,7 +107,7 @@ export class WebviewProvider implements vscode.Disposable {
     }
 
     public dispose() {
-        this._panel = undefined;
+        this._panel?.dispose();
         while (this._disposables.length) {
             const x = this._disposables.pop();
             if (x) {

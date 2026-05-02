@@ -27,6 +27,8 @@
     "build": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --platform=node --target=node18",
     "watch": "npm run build -- --watch",
     "compile": "tsc -p ./",
+    "build:analyzer": "cd analyzer && cargo build --release && (if not exist ..\\bin mkdir ..\\bin) && (copy /y target\\release\\rustpets-analyzer.exe ..\\bin\\ || cp target/release/rustpets-analyzer ../bin/)",
+    "build:all": "npm run build && npm run build:analyzer",
     "lint": "eslint src --ext ts",
     "pretest": "npm run compile && npm run lint",
     "test": "node ./out/test/runTest.js"

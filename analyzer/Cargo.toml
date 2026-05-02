@@ -1,0 +1,10 @@
+[package]
+name = "rustpets-analyzer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ra_ap_syntax = "0.0.330"
+ra_ap_line-index = "0.0.17"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

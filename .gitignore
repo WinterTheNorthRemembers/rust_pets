@@ -2,3 +2,4 @@ node_modules/
 out/
 CONTEXT and SYSTEM PROMPT/
 .vscode/
+target/
