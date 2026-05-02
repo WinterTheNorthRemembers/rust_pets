@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
+    <link rel="stylesheet" href="${styleUri}" nonce="${nonce}">
+    <title>RustPets Theatre</title>
+</head>
+<body>
+    <div class="theatre-container">
+        <header class="top-bar">
+            <div class="title">🦀 RustPets Theatre</div>
+            <div class="status-indicator">
+                <span class="dot"></span> LIVE
+            </div>
+        </header>
+        
+        <main class="stage-area">
+            <canvas id="stage"></canvas>
+        </main>
+        
+        <footer class="bottom-bar">
+            <div class="watching">Watching: <span id="filename">[No file]</span></div>
+        </footer>
+    </div>
+
+    <script nonce="${nonce}" src="${scriptCreaturesUri}"></script>
+    <script nonce="${nonce}" src="${scriptTheatreUri}"></script>
+</body>
+</html>
